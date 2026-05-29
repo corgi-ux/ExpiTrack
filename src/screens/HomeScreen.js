@@ -16,6 +16,16 @@ export default function HomeScreen({ navigation, route, userId }) {
   const { signOut }                          = useAuth();
   const [filter, setFilter]                  = useState("all");
 
+  
+// ← Rafraîchit les produits chaque fois que l'écran devient actif
+  useFocusEffect(
+    useCallback(() => {
+      if (userId) fetchProducts();
+    }, [userId])
+  );
+
+
+
   const alerts = products.filter(p => {
     const d = getDaysLeft(p.expDate);
     return d >= 0 && d <= 30;

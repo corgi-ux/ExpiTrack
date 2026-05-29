@@ -1,31 +1,48 @@
 import React, { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity,
-  ScrollView, StyleSheet                   // ← SafeAreaView retiré d'ici
+  ScrollView, StyleSheet, Platform
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context"; // ← ajouté ici
+import { SafeAreaView }          from "react-native-safe-area-context";
+import DateTimePickerModal       from "react-native-modal-datetime-picker";
 import { COLORS, CATEGORIES, DURATIONS } from "../constants";
-import { useProducts }                   from "../hooks/useProducts";
-import { addMonths }                     from "../utils/dates";
+import { useProducts }           from "../hooks/useProducts";
+import { addMonths, formatDate } from "../utils/dates";
 
 export default function AddScreen({ navigation, route, userId }) {
-  // ← userId reçu directement en prop, pas depuis route.params
-  const { addProduct } = useProducts(userId);
+  const { addProduct }            = useProducts(userId);
   const [name, setName]           = useState("");
   const [category, setCategory]   = useState("alimentaire");
   const [inputMode, setInputMode] = useState("date");
-  const [expDate, setExpDate]     = useState("");
-  const [openDate, setOpenDate]   = useState("");
+  const [expDate, setExpDate]     = useState(null);
+  const [openDate, setOpenDate]   = useState(null);
   const [duration, setDuration]   = useState(6);
+
+  // Calendrier
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [pickerTarget, setPickerTarget]   = useState("exp"); // "exp" ou "open"
+
+  const openPicker = (target) => {
+    setPickerTarget(target);
+    setPickerVisible(true);
+  };
+
+  const handleDateConfirm = (date) => {
+    setPickerVisible(false);
+    if (pickerTarget === "exp") setExpDate(date);
+    else setOpenDate(date);
+  };
 
   const handleAdd = () => {
     if (!name) return;
-    let finalDate = expDate;
-    if (inputMode === "duration") {
+    let finalDate;
+    if (inputMode === "date") {
+      if (!expDate) return;
+      finalDate = expDate.toISOString().split("T")[0];
+    } else {
       if (!openDate) return;
       finalDate = addMonths(openDate, duration).toISOString().split("T")[0];
     }
-    if (!finalDate) return;
     addProduct({ name, category, expDate: finalDate });
     navigation.goBack();
   };
@@ -34,8 +51,15 @@ export default function AddScreen({ navigation, route, userId }) {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
 
-        <Text style={styles.title}>Nouveau produit</Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Text style={styles.backText}>← Retour</Text>
+          </TouchableOpacity>
+          <Text style={styles.title}>Nouveau produit</Text>
+        </View>
 
+        {/* Nom */}
         <Text style={styles.label}>NOM DU PRODUIT</Text>
         <TextInput
           value={name} onChangeText={setName}
@@ -44,6 +68,7 @@ export default function AddScreen({ navigation, route, userId }) {
           style={styles.input}
         />
 
+        {/* Catégorie */}
         <Text style={styles.label}>CATÉGORIE</Text>
         <View style={styles.row}>
           {Object.entries(CATEGORIES).map(([key, cat]) => (
@@ -60,11 +85,12 @@ export default function AddScreen({ navigation, route, userId }) {
           ))}
         </View>
 
+        {/* Mode saisie */}
         <Text style={styles.label}>MODE DE SAISIE</Text>
         <View style={styles.row}>
           {[
-            { key: "date",     label: "📅 Date exacte"            },
-            { key: "duration", label: "⏳ Durée après ouverture"  },
+            { key: "date",     label: "📅 Date exacte"           },
+            { key: "duration", label: "⏳ Durée après ouverture" },
           ].map(m => (
             <TouchableOpacity
               key={m.key}
@@ -78,27 +104,35 @@ export default function AddScreen({ navigation, route, userId }) {
           ))}
         </View>
 
+        {/* Date exacte */}
         {inputMode === "date" ? (
           <>
-            <Text style={styles.label}>DATE D'EXPIRATION (AAAA-MM-JJ)</Text>
-            <TextInput
-              value={expDate} onChangeText={setExpDate}
-              placeholder="2025-12-31"
-              placeholderTextColor={COLORS.muted}
-              style={styles.input}
-              keyboardType="numeric"
-            />
+            <Text style={styles.label}>DATE D'EXPIRATION</Text>
+            <TouchableOpacity
+              style={styles.dateBtn}
+              onPress={() => openPicker("exp")}
+            >
+              <Text style={styles.dateBtnIcon}>📅</Text>
+              <Text style={[styles.dateBtnText, !expDate && { color: COLORS.muted }]}>
+                {expDate ? formatDate(expDate.toISOString()) : "Sélectionner une date"}
+              </Text>
+            </TouchableOpacity>
           </>
         ) : (
           <>
-            <Text style={styles.label}>DATE D'OUVERTURE (AAAA-MM-JJ)</Text>
-            <TextInput
-              value={openDate} onChangeText={setOpenDate}
-              placeholder="2025-06-01"
-              placeholderTextColor={COLORS.muted}
-              style={styles.input}
-              keyboardType="numeric"
-            />
+            {/* Date ouverture */}
+            <Text style={styles.label}>DATE D'OUVERTURE</Text>
+            <TouchableOpacity
+              style={styles.dateBtn}
+              onPress={() => openPicker("open")}
+            >
+              <Text style={styles.dateBtnIcon}>📅</Text>
+              <Text style={[styles.dateBtnText, !openDate && { color: COLORS.muted }]}>
+                {openDate ? formatDate(openDate.toISOString()) : "Sélectionner une date"}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Durée */}
             <Text style={styles.label}>DURÉE D'UTILISATION</Text>
             <View style={styles.row}>
               {DURATIONS.map(d => (
@@ -113,14 +147,34 @@ export default function AddScreen({ navigation, route, userId }) {
                 </TouchableOpacity>
               ))}
             </View>
+
+            {/* Aperçu date calculée */}
+            {openDate && (
+              <View style={styles.previewBox}>
+                <Text style={styles.previewText}>
+                  📆 Expire le {formatDate(addMonths(openDate, duration).toISOString())}
+                </Text>
+              </View>
+            )}
           </>
         )}
 
+        {/* Bouton ajouter */}
         <TouchableOpacity style={styles.submitBtn} onPress={handleAdd}>
           <Text style={styles.submitText}>Ajouter le produit ✓</Text>
         </TouchableOpacity>
 
       </ScrollView>
+
+      {/* Calendrier modal */}
+      <DateTimePickerModal
+        isVisible={pickerVisible}
+        mode="date"
+        minimumDate={new Date()}
+        onConfirm={handleDateConfirm}
+        onCancel={() => setPickerVisible(false)}
+        locale="fr_FR"
+      />
     </SafeAreaView>
   );
 }
@@ -128,7 +182,10 @@ export default function AddScreen({ navigation, route, userId }) {
 const styles = StyleSheet.create({
   safe:          { flex: 1, backgroundColor: COLORS.bg },
   container:     { padding: 24 },
-  title:         { color: COLORS.text, fontSize: 22, fontWeight: "800", marginBottom: 24 },
+  header:        { marginBottom: 24 },
+  backBtn:       { marginBottom: 12 },
+  backText:      { color: COLORS.muted, fontSize: 14 },
+  title:         { color: COLORS.text, fontSize: 22, fontWeight: "800" },
   label:         { color: COLORS.muted, fontSize: 11, fontWeight: "700", letterSpacing: 0.8, marginBottom: 8, marginTop: 16 },
   input:         { backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, borderRadius: 10, padding: 12, color: COLORS.text, fontSize: 14 },
   row:           { flexDirection: "row", gap: 8, flexWrap: "wrap" },
@@ -140,6 +197,11 @@ const styles = StyleSheet.create({
   durBtn:        { flex: 1, padding: 10, borderRadius: 10, borderWidth: 1, borderColor: COLORS.border, backgroundColor: COLORS.surface },
   durBtnActive:  { borderColor: COLORS.secondary, backgroundColor: COLORS.secondary + "22" },
   durBtnText:    { color: COLORS.muted, fontWeight: "700", textAlign: "center" },
+  dateBtn:       { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, borderRadius: 10, padding: 14 },
+  dateBtnIcon:   { fontSize: 18 },
+  dateBtnText:   { color: COLORS.text, fontSize: 14, fontWeight: "600" },
+  previewBox:    { marginTop: 12, backgroundColor: "#102d18", borderWidth: 1, borderColor: "#208b38", borderRadius: 10, padding: 12 },
+  previewText:   { color: "#69db7c", fontSize: 13, fontWeight: "600" },
   submitBtn:     { marginTop: 32, backgroundColor: COLORS.primary, borderRadius: 12, padding: 16, alignItems: "center" },
   submitText:    { color: "white", fontWeight: "800", fontSize: 15 },
 });
