@@ -6,21 +6,20 @@ import {
 import { SafeAreaView }          from "react-native-safe-area-context";
 import DateTimePickerModal       from "react-native-modal-datetime-picker";
 import { COLORS, CATEGORIES, DURATIONS } from "../constants";
-import { useProducts }           from "../hooks/useProducts";
 import { addMonths, formatDate } from "../utils/dates";
 
 export default function AddScreen({ navigation, route, userId }) {
-  const { addProduct }            = useProducts(userId);
+  // ← addProduct vient directement de HomeScreen
+  const addProduct = route.params?.addProduct;
+
   const [name, setName]           = useState("");
   const [category, setCategory]   = useState("alimentaire");
   const [inputMode, setInputMode] = useState("date");
   const [expDate, setExpDate]     = useState(null);
   const [openDate, setOpenDate]   = useState(null);
   const [duration, setDuration]   = useState(6);
-
-  // Calendrier
   const [pickerVisible, setPickerVisible] = useState(false);
-  const [pickerTarget, setPickerTarget]   = useState("exp"); // "exp" ou "open"
+  const [pickerTarget, setPickerTarget]   = useState("exp");
 
   const openPicker = (target) => {
     setPickerTarget(target);
@@ -33,7 +32,7 @@ export default function AddScreen({ navigation, route, userId }) {
     else setOpenDate(date);
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!name) return;
     let finalDate;
     if (inputMode === "date") {
@@ -43,7 +42,8 @@ export default function AddScreen({ navigation, route, userId }) {
       if (!openDate) return;
       finalDate = addMonths(openDate, duration).toISOString().split("T")[0];
     }
-    addProduct({ name, category, expDate: finalDate });
+    // ← appelle addProduct de HomeScreen directement
+    await addProduct({ name, category, expDate: finalDate });
     navigation.goBack();
   };
 
@@ -51,7 +51,6 @@ export default function AddScreen({ navigation, route, userId }) {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
 
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Text style={styles.backText}>← Retour</Text>
@@ -59,7 +58,6 @@ export default function AddScreen({ navigation, route, userId }) {
           <Text style={styles.title}>Nouveau produit</Text>
         </View>
 
-        {/* Nom */}
         <Text style={styles.label}>NOM DU PRODUIT</Text>
         <TextInput
           value={name} onChangeText={setName}
@@ -68,7 +66,6 @@ export default function AddScreen({ navigation, route, userId }) {
           style={styles.input}
         />
 
-        {/* Catégorie */}
         <Text style={styles.label}>CATÉGORIE</Text>
         <View style={styles.row}>
           {Object.entries(CATEGORIES).map(([key, cat]) => (
@@ -85,7 +82,6 @@ export default function AddScreen({ navigation, route, userId }) {
           ))}
         </View>
 
-        {/* Mode saisie */}
         <Text style={styles.label}>MODE DE SAISIE</Text>
         <View style={styles.row}>
           {[
@@ -104,14 +100,10 @@ export default function AddScreen({ navigation, route, userId }) {
           ))}
         </View>
 
-        {/* Date exacte */}
         {inputMode === "date" ? (
           <>
             <Text style={styles.label}>DATE D'EXPIRATION</Text>
-            <TouchableOpacity
-              style={styles.dateBtn}
-              onPress={() => openPicker("exp")}
-            >
+            <TouchableOpacity style={styles.dateBtn} onPress={() => openPicker("exp")}>
               <Text style={styles.dateBtnIcon}>📅</Text>
               <Text style={[styles.dateBtnText, !expDate && { color: COLORS.muted }]}>
                 {expDate ? formatDate(expDate.toISOString()) : "Sélectionner une date"}
@@ -120,19 +112,14 @@ export default function AddScreen({ navigation, route, userId }) {
           </>
         ) : (
           <>
-            {/* Date ouverture */}
             <Text style={styles.label}>DATE D'OUVERTURE</Text>
-            <TouchableOpacity
-              style={styles.dateBtn}
-              onPress={() => openPicker("open")}
-            >
+            <TouchableOpacity style={styles.dateBtn} onPress={() => openPicker("open")}>
               <Text style={styles.dateBtnIcon}>📅</Text>
               <Text style={[styles.dateBtnText, !openDate && { color: COLORS.muted }]}>
                 {openDate ? formatDate(openDate.toISOString()) : "Sélectionner une date"}
               </Text>
             </TouchableOpacity>
 
-            {/* Durée */}
             <Text style={styles.label}>DURÉE D'UTILISATION</Text>
             <View style={styles.row}>
               {DURATIONS.map(d => (
@@ -148,7 +135,6 @@ export default function AddScreen({ navigation, route, userId }) {
               ))}
             </View>
 
-            {/* Aperçu date calculée */}
             {openDate && (
               <View style={styles.previewBox}>
                 <Text style={styles.previewText}>
@@ -159,14 +145,12 @@ export default function AddScreen({ navigation, route, userId }) {
           </>
         )}
 
-        {/* Bouton ajouter */}
         <TouchableOpacity style={styles.submitBtn} onPress={handleAdd}>
           <Text style={styles.submitText}>Ajouter le produit ✓</Text>
         </TouchableOpacity>
 
       </ScrollView>
 
-      {/* Calendrier modal */}
       <DateTimePickerModal
         isVisible={pickerVisible}
         mode="date"

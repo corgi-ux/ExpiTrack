@@ -12,17 +12,15 @@ import { getDaysLeft }         from "../utils/dates";
 import ProductCard             from "../components/ProductCard";
 
 export default function HomeScreen({ navigation, route, userId }) {
-  const { products, loading, deleteProduct, fetchProducts } = useProducts(userId);
-  const { signOut }   = useAuth();
+  const { products, loading, deleteProduct, fetchProducts, addProduct } = useProducts(userId);
+  const { signOut }         = useAuth();
   const [filter, setFilter] = useState("all");
 
- useFocusEffect(
-  useCallback(() => {
-    fetchProducts();
-  }, [fetchProducts]) // ← dépend de fetchProducts et non de userId
-);
-
-
+  useFocusEffect(
+    useCallback(() => {
+      fetchProducts();
+    }, [fetchProducts])
+  );
 
   const alerts = products.filter(p => {
     const d = getDaysLeft(p.expDate);
@@ -47,7 +45,7 @@ export default function HomeScreen({ navigation, route, userId }) {
         <View style={styles.headerBtns}>
           <TouchableOpacity
             style={styles.addBtn}
-            onPress={() => navigation.navigate("Add", { userId })}
+            onPress={() => navigation.navigate("Add", { userId, addProduct })}
           >
             <Text style={styles.addBtnText}>+ Ajouter</Text>
           </TouchableOpacity>
