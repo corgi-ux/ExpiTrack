@@ -3,6 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import * as Notifications from "expo-notifications";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useAuth } from "./src/hooks/useAuth";
 import HomeScreen from "./src/screens/HomeScreen";
 import AddScreen from "./src/screens/AddScreen";
@@ -24,23 +25,25 @@ export default function App() {
   if (loading) return null;
 
   return (
-    <SafeAreaProvider>
-      <NavigationContainer ref={navigationRef}>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {user ? (
-            <>
-              <Stack.Screen name="Home">
-                {props => <HomeScreen {...props} userId={user.id} />}
-              </Stack.Screen>
-              <Stack.Screen name="Add">
-                {props => <AddScreen {...props} userId={user.id} />}
-              </Stack.Screen>
-            </>
-          ) : (
-            <Stack.Screen name="Auth" component={AuthScreen} />
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <NavigationContainer ref={navigationRef}>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            {user ? (
+              <>
+                <Stack.Screen name="Home">
+                  {props => <HomeScreen {...props} userId={user.id} />}
+                </Stack.Screen>
+                <Stack.Screen name="Add">
+                  {props => <AddScreen {...props} userId={user.id} />}
+                </Stack.Screen>
+              </>
+            ) : (
+              <Stack.Screen name="Auth" component={AuthScreen} />
+            )}
+          </Stack.Navigator>
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

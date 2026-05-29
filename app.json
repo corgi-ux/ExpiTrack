@@ -4,33 +4,39 @@
     "slug": "expitrack",
     "version": "1.0.0",
     "orientation": "portrait",
-
     "icon": "./assets/icon.png",
-
     "splash": {
-      "image":           "./assets/splash.png",
-      "resizeMode":      "contain",
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
       "backgroundColor": "#0e0e12"
     },
-
     "ios": {
       "bundleIdentifier": "com.tonnom.expitrack",
-      "buildNumber":      "1",
-      "supportsTablet":   false,
-      "icon":             "./assets/icon.png"
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "icon": "./assets/icon.png"
     },
-
     "android": {
-      "package":      "com.tonnom.expitrack",
-      "versionCode":  1,
+      "package": "com.tonnom.expitrack",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0e0e12"
       }
     },
-
     "plugins": [
-      ["expo-notifications", { "color": "#e8825a" }]
-    ]
+      [
+        "expo-notifications",
+        {
+          "color": "#e8825a"
+        }
+      ],
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "def686fe-2188-4d9c-941b-5dc989f38e7f"
+      }
+    }
   }
 }
