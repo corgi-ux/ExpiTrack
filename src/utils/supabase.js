@@ -1,8 +1,8 @@
 import { createClient }  from "@supabase/supabase-js";
 import * as SecureStore  from "expo-secure-store";
 
-const SUPABASE_URL  = "https://sb_publishable_efp6K5TzV2TOxgYsae86Vg_8Ih3moLw.supabase.co"; // ← remplace
-const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2aGdsbG9pdHVhaW54eGdjanVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MDQ2MTMsImV4cCI6MjA5NTQ4MDYxM30.QWm6559NaoN0Xuo-L9vZaUuGP6s6ZyEEzthakNlvrQY"; // ← remplace
+const SUPABASE_URL  = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON = process.env.EXPO_PUBLIC_SUPABASE_ANON;
 
 // Stockage sécurisé des tokens sur le téléphone
 const ExpoSecureStoreAdapter = {
