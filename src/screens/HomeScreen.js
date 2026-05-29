@@ -1,23 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View, Text, FlatList, TouchableOpacity,
-  StyleSheet, StatusBar                    // ← SafeAreaView retiré d'ici
+  StyleSheet, StatusBar
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context"; // ← ajouté ici
-import { COLORS, CATEGORIES }       from "../constants";
-import { useProducts }              from "../hooks/useProducts";
-import { useAuth }                  from "../hooks/useAuth";
-import { getDaysLeft }              from "../utils/dates";
-import ProductCard                  from "../components/ProductCard";
+import { SafeAreaView }        from "react-native-safe-area-context";
+import { useFocusEffect }      from "@react-navigation/native";
+import { COLORS, CATEGORIES }  from "../constants";
+import { useProducts }         from "../hooks/useProducts";
+import { useAuth }             from "../hooks/useAuth";
+import { getDaysLeft }         from "../utils/dates";
+import ProductCard             from "../components/ProductCard";
 
 export default function HomeScreen({ navigation, route, userId }) {
- 
-  const { products, loading, deleteProduct } = useProducts(userId);
-  const { signOut }                          = useAuth();
-  const [filter, setFilter]                  = useState("all");
+  const { products, loading, deleteProduct, fetchProducts } = useProducts(userId);
+  const { signOut }   = useAuth();
+  const [filter, setFilter] = useState("all");
 
-  
-// ← Rafraîchit les produits chaque fois que l'écran devient actif
   useFocusEffect(
     useCallback(() => {
       if (userId) fetchProducts();
