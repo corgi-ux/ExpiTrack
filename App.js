@@ -1,18 +1,18 @@
-import React, { useEffect, useRef }      from "react";
-import { NavigationContainer }           from "@react-navigation/native";
-import { createStackNavigator }          from "@react-navigation/stack";
-import * as Notifications                from "expo-notifications";
-import { SafeAreaProvider }              from "react-native-safe-area-context"; // ← ajout
-import { useAuth }                       from "./src/hooks/useAuth";
-import HomeScreen                        from "./src/screens/HomeScreen";
-import AddScreen                         from "./src/screens/AddScreen";
-import AuthScreen                        from "./src/screens/AuthScreen";
+import React, { useEffect, useRef } from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+import * as Notifications from "expo-notifications";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { useAuth } from "./src/hooks/useAuth";
+import HomeScreen from "./src/screens/HomeScreen";
+import AddScreen from "./src/screens/AddScreen";
+import AuthScreen from "./src/screens/AuthScreen";
 
 const Stack = createStackNavigator();
 
 export default function App() {
   const { user, loading } = useAuth();
-  const navigationRef     = useRef(null);
+  const navigationRef = useRef(null);
 
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener(() => {
@@ -24,7 +24,7 @@ export default function App() {
   if (loading) return null;
 
   return (
-    <SafeAreaProvider>                    {/* ← ajout */}
+    <SafeAreaProvider>
       <NavigationContainer ref={navigationRef}>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {user ? (
@@ -41,6 +41,6 @@ export default function App() {
           )}
         </Stack.Navigator>
       </NavigationContainer>
-    </SafeAreaProvider>                   {/* ← ajout */}
+    </SafeAreaProvider>
   );
 }
