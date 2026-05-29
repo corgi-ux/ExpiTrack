@@ -16,11 +16,11 @@ export default function HomeScreen({ navigation, route, userId }) {
   const { signOut }   = useAuth();
   const [filter, setFilter] = useState("all");
 
-  useFocusEffect(
-    useCallback(() => {
-      if (userId) fetchProducts();
-    }, [userId])
-  );
+ useFocusEffect(
+  useCallback(() => {
+    fetchProducts();
+  }, [fetchProducts]) // ← dépend de fetchProducts et non de userId
+);
 
 
 

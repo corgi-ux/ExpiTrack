@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../utils/supabase";
 import {
   scheduleProductNotifications,
@@ -7,30 +7,25 @@ import {
 
 export function useProducts(userId) {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]   = useState(true);
 
-  useEffect(() => {
-    if (userId) {
-      fetchProducts();
-    }
-  }, [userId]); // ← se relance automatiquement quand userId change
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
+    if (!userId) return;
     setLoading(true);
     const { data, error } = await supabase
       .from("products")
       .select("*")
-      .eq("user_id", userId) // ← filtre par userId explicitement
+      .eq("user_id", userId)
       .order("exp_date", { ascending: true });
 
-    if (error) {
-      console.error("Fetch error:", error);
-    } else {
-      console.log("Produits récupérés:", data); // ← log pour vérifier
-      setProducts(data.map(formatFromDB));
-    }
+    if (error) console.error("Fetch error:", error);
+    else setProducts(data.map(formatFromDB));
     setLoading(false);
-  };
+  }, [userId]); // ← fetchProducts se souvient de userId
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const addProduct = async (product) => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -43,7 +38,7 @@ export function useProducts(userId) {
 
     const newProduct = {
       ...product,
-      addedAt: new Date().toISOString(),
+      addedAt:  new Date().toISOString(),
       notifIds: [],
     };
 
@@ -61,7 +56,7 @@ export function useProducts(userId) {
 
     if (error) { console.error("Insert error:", error); return; }
 
-    // Ajoute directement dans la liste sans refetch
+    // ← Ajoute immédiatement dans la liste locale
     setProducts(prev => [...prev, formatFromDB(data)]);
     return formatFromDB(data);
   };
