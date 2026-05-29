@@ -10,28 +10,31 @@ export function useProducts(userId) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (userId) fetchProducts();
-  }, [userId]);
+    if (userId) {
+      fetchProducts();
+    }
+  }, [userId]); // ← se relance automatiquement quand userId change
 
   const fetchProducts = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("products")
       .select("*")
+      .eq("user_id", userId) // ← filtre par userId explicitement
       .order("exp_date", { ascending: true });
 
-    if (error) console.error("Fetch error:", error);
-    else setProducts(data.map(formatFromDB));
+    if (error) {
+      console.error("Fetch error:", error);
+    } else {
+      console.log("Produits récupérés:", data); // ← log pour vérifier
+      setProducts(data.map(formatFromDB));
+    }
     setLoading(false);
   };
 
   const addProduct = async (product) => {
-    // Récupère le user directement depuis Supabase — plus fiable
     const { data: { user } } = await supabase.auth.getUser();
     const currentUserId = user?.id;
-
-    console.log("userId prop:", userId);
-    console.log("userId Supabase:", currentUserId);
 
     if (!currentUserId) {
       console.error("Pas d'utilisateur connecté");
@@ -57,6 +60,8 @@ export function useProducts(userId) {
       .single();
 
     if (error) { console.error("Insert error:", error); return; }
+
+    // Ajoute directement dans la liste sans refetch
     setProducts(prev => [...prev, formatFromDB(data)]);
     return formatFromDB(data);
   };
@@ -76,12 +81,12 @@ export function useProducts(userId) {
 
 function formatToDB(p, userId) {
   return {
-    user_id:  userId,
-    name:     p.name,
-    category: p.category,
-    exp_date: p.expDate,
+    user_id:   userId,
+    name:      p.name,
+    category:  p.category,
+    exp_date:  p.expDate,
     notif_ids: p.notifIds,
-    added_at: p.addedAt,
+    added_at:  p.addedAt,
   };
 }
 
