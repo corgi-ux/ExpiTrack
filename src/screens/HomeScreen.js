@@ -10,8 +10,8 @@ import { useAuth }                  from "../hooks/useAuth";
 import { getDaysLeft }              from "../utils/dates";
 import ProductCard                  from "../components/ProductCard";
 
-export default function HomeScreen({ navigation, route }) {
-  const userId                               = route.params?.userId;
+export default function HomeScreen({ navigation, route, userId }) {
+ 
   const { products, loading, deleteProduct } = useProducts(userId);
   const { signOut }                          = useAuth();
   const [filter, setFilter]                  = useState("all");
