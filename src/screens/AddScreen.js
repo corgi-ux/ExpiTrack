@@ -8,9 +8,9 @@ import { COLORS, CATEGORIES, DURATIONS } from "../constants";
 import { useProducts }                   from "../hooks/useProducts";
 import { addMonths }                     from "../utils/dates";
 
-export default function AddScreen({ navigation, route }) {
-  const userId            = route.params?.userId;
-  const { addProduct }    = useProducts(userId);
+export default function AddScreen({ navigation, route, userId }) {
+  // ← userId reçu directement en prop, pas depuis route.params
+  const { addProduct } = useProducts(userId);
   const [name, setName]           = useState("");
   const [category, setCategory]   = useState("alimentaire");
   const [inputMode, setInputMode] = useState("date");

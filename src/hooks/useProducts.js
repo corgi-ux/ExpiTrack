@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase }            from "../utils/supabase";
+import { supabase } from "../utils/supabase";
 import {
   scheduleProductNotifications,
   cancelProductNotifications,
@@ -7,13 +7,12 @@ import {
 
 export function useProducts(userId) {
   const [products, setProducts] = useState([]);
-  const [loading,  setLoading]  = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (userId) fetchProducts();
   }, [userId]);
 
-  // ── Charger depuis Supabase ──────────────────────────────────────────────
   const fetchProducts = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -26,25 +25,34 @@ export function useProducts(userId) {
     setLoading(false);
   };
 
-  // ── Ajouter ──────────────────────────────────────────────────────────────
   const addProduct = async (product) => {
+    // Récupère le user directement depuis Supabase — plus fiable
+    const { data: { user } } = await supabase.auth.getUser();
+    const currentUserId = user?.id;
+
+    console.log("userId prop:", userId);
+    console.log("userId Supabase:", currentUserId);
+
+    if (!currentUserId) {
+      console.error("Pas d'utilisateur connecté");
+      return;
+    }
+
     const newProduct = {
       ...product,
-      addedAt:  new Date().toISOString(),
+      addedAt: new Date().toISOString(),
       notifIds: [],
     };
 
-    // Planifie les notifs
     const notifIds = await scheduleProductNotifications({
       ...newProduct,
       expDate: product.expDate,
     });
     newProduct.notifIds = notifIds;
 
-    // Sauvegarde dans Supabase
     const { data, error } = await supabase
       .from("products")
-      .insert(formatToDB(newProduct, userId))
+      .insert(formatToDB(newProduct, currentUserId))
       .select()
       .single();
 
@@ -53,13 +61,11 @@ export function useProducts(userId) {
     return formatFromDB(data);
   };
 
-  // ── Supprimer ────────────────────────────────────────────────────────────
   const deleteProduct = async (id) => {
     const product = products.find(p => p.id === id);
     if (product?.notifIds?.length) {
       await cancelProductNotifications(product.notifIds);
     }
-
     const { error } = await supabase.from("products").delete().eq("id", id);
     if (error) { console.error("Delete error:", error); return; }
     setProducts(prev => prev.filter(p => p.id !== id));
@@ -68,15 +74,14 @@ export function useProducts(userId) {
   return { products, loading, addProduct, deleteProduct, fetchProducts };
 }
 
-// ── Helpers format BD ↔ App ─────────────────────────────────────────────────
 function formatToDB(p, userId) {
   return {
-    user_id:   userId,
-    name:      p.name,
-    category:  p.category,
-    exp_date:  p.expDate,
+    user_id:  userId,
+    name:     p.name,
+    category: p.category,
+    exp_date: p.expDate,
     notif_ids: p.notifIds,
-    added_at:  p.addedAt,
+    added_at: p.addedAt,
   };
 }
 
